@@ -1,0 +1,8 @@
+[package]
+name = "befunge"
+version = "0.1.0"
+authors = ["Oreoluwa Babarinsa <oreoluwa@babarinsa.me>"]
+
+[dependencies]
+regex = "0.2"
+rand = "0.3"
