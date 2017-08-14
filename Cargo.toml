@@ -6,3 +6,4 @@ authors = ["Oreoluwa Babarinsa <oreoluwa@babarinsa.me>"]
 [dependencies]
 regex = "0.2"
 rand = "0.3"
+clap = "^2.26.0"
