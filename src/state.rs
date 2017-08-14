@@ -2,6 +2,7 @@ use std::char;
 use std::collections::HashMap;
 use std::convert::AsRef;
 use std::fs::File;
+use std::io;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::io::Result;
@@ -9,9 +10,8 @@ use std::path::Path;
 use std::vec::Vec;
 
 use state::Direction::*;
-
-use matcher;
 use util;
+
 extern crate rand;
 
 // Location represents a specific place in the execution space
@@ -279,9 +279,18 @@ impl State {
             ':' => self.stack.duplicate_top(),
             '\\' => self.stack.swap_top(),
 
+            // input operators
+            '&' => read_integer(self),
+            '~' => read_char(self),
+
             // output operators
             '.' => print_digit(self),
             ',' => print_char(self),
+
+            // load/store operations
+            'p' => put(self),
+            'g' => get(self),
+
 
             // end the program
             '@' => end_program(self),
@@ -289,6 +298,30 @@ impl State {
         };
 
     }
+}
+
+// read_char reads a character from the user
+fn read_char(state : &mut State) {
+    let mut input = String::new();
+    let mut ch : char = 0 as char;
+    if let Ok(_) = io::stdin().read_line(&mut input) {
+        if let Some(c) = input.chars().next(){
+            ch = c;
+        }
+    }
+    state.stack.push(util::char_to_i64(ch));
+}
+
+// read_integer reads a number from the commandline
+fn read_integer(state : &mut State) {
+    let mut input = String::new();
+    if let Ok(_) = io::stdin().read_line(&mut input) {
+        if let Ok(value) = input.trim().parse::<i64>() {
+            state.stack.push(value);
+            return;
+        }
+    }
+    state.stack.push(0);
 }
 
 // put pops the values y, x, and v and stores value v at location {x,y}
@@ -333,7 +366,7 @@ fn print_digit(state: &mut State) {
 
 // print_char prints the top value on the stack as a char
 fn print_char(state: &mut State) {
-    print!("{}", state.stack.pop() as char);
+    print!("{}", util::i64_to_char(state.stack.pop()));
 }
 
 // push_digit takes a character and pushs it onto the stack as a digit
