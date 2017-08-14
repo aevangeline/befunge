@@ -212,7 +212,7 @@ impl State {
 
     // next_value increments the cursor and produces the next value if there is one
     fn next_value(&mut self) -> Option<char> {
-        self.increment_cursor();
+        self.step_cursor();
         self.current_value()
     }
 
