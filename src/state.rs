@@ -73,13 +73,6 @@ impl Direction {
         }
     }
 
-    pub fn up_or_down() -> Direction {
-        if rand::random() { Up } else { Down }
-    }
-
-    pub fn right_or_left() -> Direction {
-        if rand::random() { Right } else { Down }
-    }
 }
 
 
@@ -167,6 +160,7 @@ impl State {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut state = State::empty_state();
+        let mut i = 0;
         for line in buf_reader.lines() {
             let l = line.unwrap_or_default();
             let mut vec = Vec::new();
@@ -179,16 +173,21 @@ impl State {
     }
 
     // value_at - returns the value at a given location
-    pub fn value_at(&self, loc: Location) -> Option<char> {
+    fn value_at(&self, loc: Location) -> Option<char> {
+        if self.execution_mode == Mode::Exited {
+            return None
+        }
+
         if self.grid_updates.contains_key(&loc) {
             return Some(self.grid_updates[&loc]);
         }
-
-        if self.initial_grid.len() >= loc.y {
+        let ydim = self.initial_grid.len();
+        if ydim <= loc.y {
             return None;
         }
 
-        if self.initial_grid[loc.y].len() >= loc.x {
+        let xdim = self.initial_grid[loc.y].len();
+        if xdim <= loc.x {
             return None;
         }
 
@@ -196,12 +195,12 @@ impl State {
     }
 
     // current_value - gets the value at the current position
-    pub fn current_value(&self) -> Option<char> {
+    fn current_value(&self) -> Option<char> {
         self.value_at(self.cursor.clone())
     }
 
     // set_value - sets the value at a given location
-    pub fn set_value(&mut self, loc: Location, ch: char) {
+    fn set_value(&mut self, loc: Location, ch: char) {
         self.grid_updates.insert(loc, ch);
     }
 
@@ -212,28 +211,44 @@ impl State {
 
     // next_value increments the cursor and produces the next value if there is one
     fn next_value(&mut self) -> Option<char> {
-        self.step_cursor();
-        self.current_value()
+        let v = self.current_value();
+        self.increment_cursor();
+        v
+    }
+
+    // run evaluates the befunge program to completion
+    pub fn run(&mut self) {
+        while let Some(ch) = self.step_cursor() {
+            match self.execution_mode {
+                Mode::Normal => self.process_normal(ch),
+                Mode::Quoted => self.process_quoted(ch),
+                _ => panic!("Unknown State!")
+            };
+
+        }
     }
 
     // step_cursor moves the cursor to the next valid space
-    pub fn step_cursor(&mut self) -> bool {
+    fn step_cursor(&mut self) -> Option<char> {
         if self.execution_mode == Mode::Exited {
-            return false;
+            return None;
         }
 
         let start = self.cursor;
-        while self.next_value().is_none() {
+        let mut value = self.next_value();
+        while value.is_none() {
             if start == self.cursor {
-                return false;
+                self.execution_mode = Mode::Exited;
+                return None;
             }
+            value = self.next_value();
         }
 
-        true
+        self.current_value()
     }
 
     // process_quoted reads the current character and pushes it onto the stack if needed
-    pub fn process_quoted(&mut self, ch: char) {
+    fn process_quoted(&mut self, ch: char) {
         if ch == '"' {
             self.execution_mode = Mode::Normal;
             return;
@@ -243,7 +258,7 @@ impl State {
 
 
     // process_normal reads the current character and process it according to normal rules
-    pub fn process_normal(&mut self, ch: char) {
+    fn process_normal(&mut self, ch: char) {
         match ch {
             // push digits to the stack
             '0'...'9' | 'a'...'f' => push_digit(self, ch),
@@ -337,6 +352,7 @@ fn get(state: &mut State) {
     let y = state.stack.pop();
     let x = state.stack.pop();
     let v = util::char_to_i64(state.value_at(Location{x : x as usize, y : y as usize}).unwrap_or(0 as char));
+    state.stack.push(v);
 }
 
 // greater_than tests if b > a
