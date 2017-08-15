@@ -244,7 +244,7 @@ impl State {
             value = self.next_value();
         }
 
-        self.current_value()
+        value.clone()
     }
 
     // process_quoted reads the current character and pushes it onto the stack if needed

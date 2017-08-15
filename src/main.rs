@@ -17,7 +17,6 @@ fn main() {
         .get_matches();
 
     let fname = args.value_of("SOURCE").unwrap();
-
     match state::State::new_from_file(fname).as_mut() {
         Ok(state) => state.run(),
         Err(e) => eprintln!("Befunge error : {}", e),
