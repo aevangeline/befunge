@@ -209,39 +209,34 @@ impl State {
         self.cursor.step_mut(self.direction)
     }
 
-    // next_value increments the cursor and produces the next value if there is one
-    fn next_value(&mut self) -> Option<char> {
-        let v = self.current_value();
-        self.increment_cursor();
-        v
-    }
-
     // run evaluates the befunge program to completion
     pub fn run(&mut self) {
-        while let Some(ch) = self.step_cursor() {
+        while let Some(ch) = self.next_instruction() {
             match self.execution_mode {
                 Mode::Normal => self.process_normal(ch),
                 Mode::Quoted => self.process_quoted(ch),
                 _ => panic!("Unknown State!")
             };
+           self.increment_cursor();
 
         }
     }
 
-    // step_cursor moves the cursor to the next valid space
-    fn step_cursor(&mut self) -> Option<char> {
+    // next_instruction retrieves the next instruction from the program
+    fn next_instruction(&mut self) -> Option<char> {
         if self.execution_mode == Mode::Exited {
             return None;
         }
 
         let start = self.cursor;
-        let mut value = self.next_value();
+        let mut value = self.current_value();
         while value.is_none() {
             if start == self.cursor {
                 self.execution_mode = Mode::Exited;
                 return None;
             }
-            value = self.next_value();
+            self.increment_cursor();
+            value = self.current_value();
         }
 
         value.clone()
@@ -265,7 +260,7 @@ impl State {
 
             // modal operators
             '"' => self.execution_mode = Mode::Quoted,
-            '#' => {self.step_cursor();},
+            '#' => {self.increment_cursor();},
 
             // arithmetic operators
             '+' => addition(self),
