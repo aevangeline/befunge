@@ -47,11 +47,6 @@ impl Location {
         *self
 
     }
-
-    // new creates a new Location object
-    pub fn new(x: usize, y: usize) -> Location {
-        Location { x: x, y: y }
-    }
 }
 
 // Direction represents a specific direction for the interpreter to go
@@ -160,7 +155,6 @@ impl State {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
         let mut state = State::empty_state();
-        let mut i = 0;
         for line in buf_reader.lines() {
             let l = line.unwrap_or_default();
             let mut vec = Vec::new();
