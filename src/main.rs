@@ -8,7 +8,7 @@ use clap::{App, Arg};
 fn main() {
     let args = App::new("Befunge")
         .version("0.1.0")
-        .author("Oreoluwa Babarinsa <oreoluwa@babarinsa.me>")
+        .author("Aurelia Augusta <aurelia@aeva.dev>")
         .about("Interprets Befunge-9x programs")
         .arg(Arg::with_name("SOURCE")
              .help("the befunge source file")
